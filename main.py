@@ -7,6 +7,8 @@ import requests
 from requests.structures import CaseInsensitiveDict
 from discord.ext.commands import Bot
 import json
+from dotenv import load_dotenv
+load_dotenv("variables.env")
 #######################################################################
 ## Download sound files
 #######################################################################
@@ -23,7 +25,7 @@ import json
 #    r =  requests.get(a_href["href"], allow_redirects=True)
 #    split_link = a_href["href"].split('/')
 #    quote = split_link[len(split_link) - 1]
-#    open(quote, 'wb').write(r.content) 
+#    open(os.path.join("quotes", quote), 'wb').write(r.content) 
 #    filenames.append(quote)
 #
 #with open('quotes.json', 'w') as outfile:
@@ -56,13 +58,13 @@ async def on_message(message):
         return
 
     if "gandalf" in message.content:
-      if len(client.voice_clients) < 1:
+      if message.author.voice.channel not in client.voice_clients :
         voice = await message.author.voice.channel.connect()
-        source = FFmpegPCMAudio(quotes[random.randint(0, len(quotes) - 1)])
+        source = FFmpegPCMAudio(os.path.join("quotes", quotes[random.randint(0, len(quotes) - 1)]), executable=os.environ.get("FFMPEG_PATH"))
         player = voice.play(source)
       else:
         voice = client.voice_clients[0]
         source = FFmpegPCMAudio(quotes[random.randint(0, len(quotes) - 1)])
         player = voice.play(source)
 
-client.run(os.getenv('TOKEN'))
+client.run(os.environ.get("TOKEN"))
