@@ -89,14 +89,11 @@ async def connect(ctx):
     voice = await ctx.author.voice.channel.connect()
 
 # Plays a random quote
-async def playQuote():
-  source = FFmpegPCMAudio(os.path.join("quotes", quotes[random.randint(0, len(quotes) - 1)]), executable=os.environ.get("FFMPEG_PATH"))
-  try: 
-   voice.play(source)
-  except ClientException as e:
-    # ClientException means audio is already playing
+async def playAudio(source):  
+  if voice.is_playing():
     voice.stop()
-    voice.play(source)
+
+  voice.play(source)
 
 async def downloadVideoFromYtUrl(url):
   ydl_options = {
@@ -109,6 +106,7 @@ async def downloadVideoFromYtUrl(url):
   }
 
   with yt_dlp.YoutubeDL(ydl_options) as ydl:
+    ## ajouter variable isDownloading
     ydl.download([url])
 
 async def renameSongFile():
@@ -129,13 +127,14 @@ async def on_message(message):
   if "gandalf" in message.content:
     await connect(message)
     
-    await playQuote()
+    source = FFmpegPCMAudio(os.path.join("quotes", quotes[random.randint(0, len(quotes) - 1)]), executable=os.environ.get("FFMPEG_PATH"))
+    await playAudio(source)
 
-  # This is needed to trigger Commands like !play or !stop
+  # This is needed to trigger Commands like !playAudio or !stop
   await bot.process_commands(message)
 
 # Checks if a song is already playing
-async def isSongPlaying() -> bool:
+async def isSongThere() -> bool:
   for file in os.listdir("./"):
     if file.title() == "Song.Mp3":
       return True
@@ -145,24 +144,31 @@ async def isSongPlaying() -> bool:
 # Plays a song using youtube URL specified
 @bot.command()
 async def play(ctx, arg):
-  song_playing = await isSongPlaying()
-  
-  global voice
-  
-  try:
-    if song_playing:
-      os.remove("song.mp3")
-  except PermissionError as e:
-    await ctx.send("Fly, you fools! (song already playing)")
-  
-  await connect(ctx)
+  if voice == None:
+    await play_song(ctx, arg)
+  else: 
+    if not voice.is_playing():
+      await play_song(ctx, arg)
+    else: 
+      # Add song to queue
+      ctx.send("Queues haven't been implemented yet. Please use !stop or wait until song has finished playing")
 
-  await downloadVideoFromYtUrl(arg)
+async def play_song(ctx, arg):
+  song_there = await isSongThere()
+
+  if song_there:
+    os.remove("song.mp3")
   
-  await renameSongFile()
+    await connect(ctx)
+
+    await downloadVideoFromYtUrl(arg)  
+    await renameSongFile()
+
+    source = discord.FFmpegPCMAudio("song.mp3")
+    await playAudio(source)
   
-  # Play file audio
-  voice.play(discord.FFmpegPCMAudio("song.mp3"))
+
+  
 
 @bot.command()
 async def stop(ctx):
