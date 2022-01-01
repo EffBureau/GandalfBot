@@ -47,6 +47,7 @@ if not any(files):
       open(os.path.join("quotes", quote), 'wb').write(r.content)
       filenames.append(quote)
   
+  # Dump all file names in a .json file
   with open('quotes.json', 'w') as outfile:
       json.dump(filenames, outfile)
 
@@ -61,8 +62,10 @@ if not any(files):
 # Initiate bot
 bot = commands.Bot(command_prefix="!")
 
-# Get all quotes in an arrat
+# Get all quotes in an array
 quotes = []
+
+voice = None
 
 with open('quotes.json') as json_quotes:
   quotes.extend(json.load(json_quotes))
@@ -75,7 +78,8 @@ async def on_ready():
 # Checks if bot is connected to voice channel
 def is_connected(ctx):
     voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
-    return voice_client and voice_client.is_connected()
+    isConnected = voice_client and voice_client.is_connected() 
+    return isConnected
 
 # Connects to a voice channel
 async def connect(ctx):
@@ -84,15 +88,12 @@ async def connect(ctx):
   if not (is_connected(ctx)):
     voice = await ctx.author.voice.channel.connect()
 
-voice = None
-
 # Plays a random quote
 async def playQuote():
   source = FFmpegPCMAudio(os.path.join("quotes", quotes[random.randint(0, len(quotes) - 1)]), executable=os.environ.get("FFMPEG_PATH"))
   try: 
    voice.play(source)
   except ClientException as e:
-
     # ClientException means audio is already playing
     voice.stop()
     voice.play(source)
@@ -154,18 +155,18 @@ async def play(ctx, arg):
   except PermissionError as e:
     await ctx.send("Fly, you fools! (song already playing)")
   
-  connect(ctx)
+  await connect(ctx)
 
-  downloadVideoFromYtUrl(url)
+  await downloadVideoFromYtUrl(arg)
   
-  renameSongFile()
+  await renameSongFile()
   
   # Play file audio
   voice.play(discord.FFmpegPCMAudio("song.mp3"))
 
 @bot.command()
 async def stop(ctx):
-  if is_connected():
+  if is_connected(ctx):
     global voice
 
     voice.stop()
