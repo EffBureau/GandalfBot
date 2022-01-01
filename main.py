@@ -127,7 +127,7 @@ async def on_message(message):
   global voice
 
   if "gandalf" in message.content:
-    connect(message)
+    await connect(message)
     
     await playQuote()
 
