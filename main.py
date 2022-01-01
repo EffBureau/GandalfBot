@@ -15,27 +15,41 @@ import json
 import yt_dlp
 from dotenv import load_dotenv
 load_dotenv("variables.env")
+
 #######################################################################
-## Download sound files
+## Download Gandalf Quotes
 #######################################################################
-#files = glob.glob("*.wav")
-#for file in files:
-#  os.remove(file)
-#url = "http://www.theargonath.cc/characters/gandalf/sounds/sounds.html"
-#page = requests.get(url, allow_redirects=True)
-#
-#filenames = []
-#soup = BeautifulSoup(page.content, "html.parser")
-#for a_href in soup.find_all("a", href=True):
-#  if "html" not in a_href["href"]:
-#    r =  requests.get(a_href["href"], allow_redirects=True)
-#    split_link = a_href["href"].split('/')
-#    quote = split_link[len(split_link) - 1]
-#    open(os.path.join("quotes", quote), 'wb').write(r.content) 
-#    filenames.append(quote)
-#
-#with open('quotes.json', 'w') as outfile:
-#    json.dump(filenames, outfile)
+
+# Find all .wav files
+files = glob.glob("quotes/*.wav")
+
+# Check if files are empty
+if not any(files):
+
+  # Page content
+  url = "http://www.theargonath.cc/characters/gandalf/sounds/sounds.html"
+  page = requests.get(url, allow_redirects=True)
+  
+  
+  filenames = []
+  soup = BeautifulSoup(page.content, "html.parser")
+
+  # For each file to download
+  for a_href in soup.find_all("a", href=True):
+    if "html" not in a_href["href"]:
+      r =  requests.get(a_href["href"], allow_redirects=True)
+
+      # Split the link to get file name
+      split_link = a_href["href"].split('/')
+      quote = split_link[len(split_link) - 1]
+
+      # Create file
+      open(os.path.join("quotes", quote), 'wb').write(r.content)
+      filenames.append(quote)
+  
+  with open('quotes.json', 'w') as outfile:
+      json.dump(filenames, outfile)
+
 #######################################################################
 ##*******************************************************************##
 #######################################################################
@@ -43,80 +57,47 @@ load_dotenv("variables.env")
 #######################################################################
 ## Play sound files
 #######################################################################
+
+# Initiate bot
 bot = commands.Bot(command_prefix="!")
 
-headers = CaseInsensitiveDict()
-headers["Accept"] = "application/json"
-headers["Authorization"] = "Bearer JQ6KMVxKnmWdTxYZYax3"
-
+# Get all quotes in an arrat
 quotes = []
 
 with open('quotes.json') as json_quotes:
   quotes.extend(json.load(json_quotes))
 
+# When the bot is online
 @bot.event
 async def on_ready():
   print('We have logged in as {0.user}'.format(bot))
 
+# Checks if bot is connected to voice channel
 def is_connected(ctx):
-    voice_client = discord.utils.get(ctx.bot.voice_clients, guild=ctx.guild)
+    voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
     return voice_client and voice_client.is_connected()
+
+# Connects to a voice channel
+async def connect(ctx):
+  global voice
+
+  if not (is_connected(ctx)):
+    voice = await ctx.author.voice.channel.connect()
 
 voice = None
 
-isPlaying = False
-
+# Plays a random quote
 async def playQuote():
   source = FFmpegPCMAudio(os.path.join("quotes", quotes[random.randint(0, len(quotes) - 1)]), executable=os.environ.get("FFMPEG_PATH"))
   try: 
    voice.play(source)
   except ClientException as e:
+
+    # ClientException means audio is already playing
     voice.stop()
     voice.play(source)
 
-
-
-@bot.event
-async def on_message(message):      
-
-  if message.author == bot.user:
-      return
-
-  global voice
-
-  if "gandalf" in message.content:
-    voice_client = discord.utils.get(bot.voice_clients, guild=message.guild)
-    
-    if not (voice_client and voice_client.is_connected()):
-      voice = await message.author.voice.channel.connect()
-    
-    await playQuote()
-
-  await bot.process_commands(message)
-
-async def isSongThere() -> bool:
-  for file in os.listdir("./"):
-    if file.title() == "Song.Mp3":
-      return True
-  
-  return False
-
-@bot.command()
-async def play(ctx, arg):
-  song_there = await isSongThere()
-  
-  global voice
-  try:
-    if song_there:
-      os.remove("song.mp3")
-  except PermissionError as e:
-    await ctx.send("Fly, you fools! (song already playing)")
-
-  voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
-  
-  if not (voice_client and voice_client.is_connected()):
-    voice = await ctx.author.voice.channel.connect()
-
+async def downloadVideoFromYtUrl(url):
   ydl_options = {
     'format': 'bestaudio/best',
     'postprocessors': [{
@@ -127,21 +108,67 @@ async def play(ctx, arg):
   }
 
   with yt_dlp.YoutubeDL(ydl_options) as ydl:
-    ydl.download([arg])
-  
+    ydl.download([url])
+
+async def renameSongFile():
   for file in os.listdir("./"):
     if file.endswith(".mp3"):
       os.rename(file, "song.mp3")
+
+# On message in chat
+@bot.event
+async def on_message(message):      
+
+  # Making sure bot doesn't read own messages
+  if message.author == bot.user:
+      return
+
+  global voice
+
+  if "gandalf" in message.content:
+    connect(message)
+    
+    await playQuote()
+
+  # This is needed to trigger Commands like !play or !stop
+  await bot.process_commands(message)
+
+# Checks if a song is already playing
+async def isSongPlaying() -> bool:
+  for file in os.listdir("./"):
+    if file.title() == "Song.Mp3":
+      return True
   
+  return False
+
+# Plays a song using youtube URL specified
+@bot.command()
+async def play(ctx, arg):
+  song_playing = await isSongPlaying()
+  
+  global voice
+  
+  try:
+    if song_playing:
+      os.remove("song.mp3")
+  except PermissionError as e:
+    await ctx.send("Fly, you fools! (song already playing)")
+  
+  connect(ctx)
+
+  downloadVideoFromYtUrl(url)
+  
+  renameSongFile()
+  
+  # Play file audio
   voice.play(discord.FFmpegPCMAudio("song.mp3"))
 
 @bot.command()
 async def stop(ctx):
-  voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
-  
-  if voice_client and voice_client.is_connected():
-      global voice
-      voice.stop()
+  if is_connected():
+    global voice
+
+    voice.stop()
 
 
 bot.run(os.environ.get("TOKEN"))
