@@ -1,15 +1,10 @@
 from asyncio.windows_events import NULL
-from gc import get_stats
 import discord
 from discord import FFmpegPCMAudio
 import random
 import glob, os
 from bs4 import BeautifulSoup
-from discord.errors import ClientException
-from discord.voice_client import VoiceClient
 import requests
-from requests.structures import CaseInsensitiveDict
-from discord.ext.commands import Bot
 from discord.ext import commands
 import json
 import yt_dlp
@@ -29,7 +24,6 @@ if not any(files):
   # Page content
   url = "http://www.theargonath.cc/characters/gandalf/sounds/sounds.html"
   page = requests.get(url, allow_redirects=True)
-  
   
   filenames = []
   soup = BeautifulSoup(page.content, "html.parser")
@@ -66,7 +60,6 @@ bot = commands.Bot(command_prefix="!")
 quotes = []
 
 voice = None
-
 with open('quotes.json') as json_quotes:
   quotes.extend(json.load(json_quotes))
 
@@ -168,7 +161,6 @@ async def play_song(ctx, arg):
     await playAudio(source)
   
 
-  
 
 @bot.command()
 async def stop(ctx):
