@@ -56,10 +56,11 @@ if not any(files):
 # Initiate bot
 bot = commands.Bot(command_prefix="!")
 
+voice = None
+
 # Get all quotes in an array
 quotes = []
 
-voice = None
 with open('quotes.json') as json_quotes:
   quotes.extend(json.load(json_quotes))
 
@@ -82,13 +83,14 @@ async def connect(ctx):
     voice = await ctx.author.voice.channel.connect()
 
 # Plays a random quote
-async def playAudio(source):  
+async def play_audio(source):  
   if voice.is_playing():
     voice.stop()
 
   voice.play(source)
 
-async def downloadVideoFromYtUrl(url):
+# Downloads youtube video from url using yt-dlp
+async def download_yt_video_from_url(url):
   ydl_options = {
     'format': 'bestaudio/best',
     'postprocessors': [{
@@ -99,10 +101,9 @@ async def downloadVideoFromYtUrl(url):
   }
 
   with yt_dlp.YoutubeDL(ydl_options) as ydl:
-    ## ajouter variable isDownloading
     ydl.download([url])
 
-async def renameSongFile():
+async def rename_song_file():
   for file in os.listdir("./"):
     if file.endswith(".mp3"):
       os.rename(file, "song.mp3")
@@ -112,7 +113,7 @@ async def renameSongFile():
 async def on_message(message):      
 
   # Making sure bot doesn't read own messages
-  if message.author == bot.user:
+  if message.author is bot.user:
       return
 
   global voice
@@ -121,52 +122,81 @@ async def on_message(message):
     await connect(message)
     
     source = FFmpegPCMAudio(os.path.join("quotes", quotes[random.randint(0, len(quotes) - 1)]), executable=os.environ.get("FFMPEG_PATH"))
-    await playAudio(source)
+    await play_audio(source)
 
-  # This is needed to trigger Commands like !playAudio or !stop
+  # This is needed to trigger actual commands like !play or !stop
   await bot.process_commands(message)
 
 # Checks if a song is already playing
-async def isSongThere() -> bool:
+async def is_song_there() -> bool:
   for file in os.listdir("./"):
     if file.title() == "Song.Mp3":
       return True
   
   return False
 
-# Plays a song using youtube URL specified
-@bot.command()
+@bot.command(brief='Plays a video\'s audio using youtube URL specified')
 async def play(ctx, arg):
-  if voice == None:
+  if voice is None:
     await play_song(ctx, arg)
   else: 
     if not voice.is_playing():
       await play_song(ctx, arg)
     else: 
       # Add song to queue
-      ctx.send("Queues haven't been implemented yet. Please use !stop or wait until song has finished playing")
+      await ctx.send("Queues haven't been implemented yet. Please use !stop or wait until song has finished playing")
 
 async def play_song(ctx, arg):
-  song_there = await isSongThere()
+  song_there = await is_song_there()
 
   if song_there:
     os.remove("song.mp3")
   
+  await connect(ctx)
+
+  await download_yt_video_from_url(arg)
+  await rename_song_file()
+
+  source = discord.FFmpegPCMAudio("song.mp3")
+  await play_audio(source)
+  
+@bot.command(brief='Stops the player')
+async def stop(ctx):
+  global voice
+
+  if voice is not None:
+    if voice.is_playing():
+      voice.stop()
+
+@bot.command(brief='Pauses the player')
+async def pause(ctx):
+  global voice
+
+  if voice is not None:
+    if voice.is_playing():
+      voice.pause()
+
+@bot.command(brief='Resumes the player')
+async def resume(ctx):
+  global voice
+
+  if voice is not None:
+    if voice.is_paused():
+      voice.resume()
+
+@bot.command(brief='Plays the John Cena Intro')
+async def jc(ctx):
     await connect(ctx)
 
-    await downloadVideoFromYtUrl(arg)  
-    await renameSongFile()
+    source = discord.FFmpegPCMAudio("songs/JohnCena.mp3")
+    await play_audio(source)
 
-    source = discord.FFmpegPCMAudio("song.mp3")
-    await playAudio(source)
-  
+@bot.command(brief='Plays the Star Wars Cantina')
+async def cantina(ctx):
+    await connect(ctx)
 
+    source = discord.FFmpegPCMAudio("songs/Cantina.mp3")
+    await play_audio(source)
 
-@bot.command()
-async def stop(ctx):
-  if is_connected(ctx):
-    global voice
-
-    voice.stop()
 
 bot.run(os.environ.get("TOKEN"))
