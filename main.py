@@ -198,5 +198,12 @@ async def cantina(ctx):
     source = discord.FFmpegPCMAudio("songs/Cantina.mp3")
     await play_audio(source)
 
+@bot.command(brief='Plays Lost Woods from Zelda: Ocarina of Time')
+async def lw(ctx):
+    await connect(ctx)
+
+    source = discord.FFmpegPCMAudio("songs/LostWoods.mp3")
+    await play_audio(source)
+
 
 bot.run(os.environ.get("TOKEN"))
