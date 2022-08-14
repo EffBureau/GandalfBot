@@ -240,6 +240,11 @@ class Music(commands.Cog):
       if voice_client.is_playing():  
         voice_client.stop()
 
+        await ctx.send("Stopping")
+      else:
+        await ctx.send("Nothing to stop")
+    else :
+      await ctx.send("Nothing to stop")
 
   @commands.command(brief='Pauses the player')
   async def pause(self, ctx):
@@ -249,6 +254,11 @@ class Music(commands.Cog):
       if voice_client.is_playing():  
         voice_client.pause()
         
+        await ctx.send("Pausing")
+      else:
+        await ctx.send("Nothing to pause")
+    else :
+      await ctx.send("Nothing to pause")
 
   @commands.command(brief='Resumes the player')
   async def resume(self, ctx):
@@ -258,6 +268,11 @@ class Music(commands.Cog):
       if voice_client.is_playing():        
         voice_client.resume()
 
+        await ctx.send("Resuming")
+      else:
+        await ctx.send("Nothing to resume")
+    else :
+      await ctx.send("Nothing to resume")
 
   @commands.command(brief='Plays the John Cena Intro')
   async def jc(self, ctx):
@@ -272,11 +287,13 @@ class Music(commands.Cog):
         play_audio(ctx, player)
         await let_bot_sleep(ctx)
 
+        await ctx.send("Now playing: John Cena")
     else:  
       await connect(ctx)
       play_audio(ctx, player)
       await let_bot_sleep(ctx)
       
+      await ctx.send("Now playing: John Cena")
 
   @commands.command(brief='Plays the Star Wars Cantina')
   async def cantina(self, ctx):
@@ -290,11 +307,14 @@ class Music(commands.Cog):
       else:
         play_audio(ctx, player)
         await let_bot_sleep(ctx)
+
+        await ctx.send("Now playing: Cantina")
     else:  
       await connect(ctx)
       play_audio(ctx, player)
       await let_bot_sleep(ctx)
 
+      await ctx.send("Now playing: Cantina")
 
   @commands.command(brief='Plays Lost Woods from Zelda: Ocarina of Time')
   async def lw(self, ctx):
@@ -309,9 +329,13 @@ class Music(commands.Cog):
         play_audio(ctx, player)
         await let_bot_sleep(ctx)
 
+        await ctx.send("Now playing: Lost woods")
     else:  
       await connect(ctx)
       play_audio(ctx, player)
       await let_bot_sleep(ctx)
+
+      await ctx.send("Now playing: Lost woods")
+      
 bot.add_cog(Music(bot))
 bot.run(os.environ.get("TOKEN"))
