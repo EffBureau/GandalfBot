@@ -98,8 +98,8 @@ async def on_message(message):
   if message.author is bot.user:
       return
 
-  if "gandalf" in message.content:
   # Plays a random gandalf quote whenever "gandalf" is present in message
+  if "gandalf" in message.content.lower():
     ctx = await bot.get_context(message)
     await connect(ctx)
     
