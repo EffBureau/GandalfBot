@@ -99,6 +99,7 @@ async def on_message(message):
       return
 
   if "gandalf" in message.content:
+  # Plays a random gandalf quote whenever "gandalf" is present in message
     ctx = await bot.get_context(message)
     await connect(ctx)
     
