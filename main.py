@@ -3,11 +3,12 @@ import discord
 from discord import FFmpegPCMAudio
 import random
 import glob, os
+import asyncio
 from bs4 import BeautifulSoup
 import requests
 from discord.ext import commands
 import json
-import yt_dlp
+import youtube_dl
 from dotenv import load_dotenv
 load_dotenv("variables.env")
 
