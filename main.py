@@ -57,8 +57,6 @@ if not any(files):
 # Initiate bot
 bot = commands.Bot(command_prefix="!")
 
-voice = None
-
 # Get all quotes in an array
 quotes = []
 
@@ -78,17 +76,15 @@ def is_connected(ctx):
 
 # Connects to a voice channel
 async def connect(ctx):
-  global voice
-
   if not (is_connected(ctx)):
-    voice = await ctx.author.voice.channel.connect()
+    await ctx.author.voice.channel.connect()
 
 # Plays a random quote
 async def play_audio(source):  
-  if voice.is_playing():
-    voice.stop()
+  if ctx.voice_client.is_playing():
+    ctx.voice_client.stop()
 
-  voice.play(source)
+  ctx.voice_client.play(player, after=lambda e: print(f'Player error: {e}') if e else None)
 
 # Downloads youtube video from url using yt-dlp
 async def download_yt_video_from_url(url):
@@ -117,7 +113,6 @@ async def on_message(message):
   if message.author is bot.user:
       return
 
-  global voice
 
   if "gandalf" in message.content:
     await connect(message)
@@ -163,7 +158,6 @@ async def play_song(ctx, arg):
   
 @bot.command(brief='Stops the player')
 async def stop(ctx):
-  global voice
 
   if voice is not None:
     if voice.is_playing():
