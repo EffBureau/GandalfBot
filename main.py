@@ -117,7 +117,7 @@ async def on_message(message):
 
     if voice_client is not None:
       if voice_client.is_playing():
-        await Music.enqueue(ctx, player)
+        await ctx.send("This feature isn't available while a song is playing")
       else:        
         play_audio(ctx, player)
         await let_bot_sleep(ctx)
