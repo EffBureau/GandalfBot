@@ -63,6 +63,8 @@ quotes = []
 with open('quotes.json') as json_quotes:
   quotes.extend(json.load(json_quotes))
 
+queues = {}
+
 # When the bot is online
 @bot.event
 async def on_ready():
@@ -79,16 +81,24 @@ async def connect(ctx):
   if not (is_connected(ctx)):
     await ctx.author.voice.channel.connect()
 
+def get_next_player(ctx):
+  server = ctx.message.guild
+
+  if queues[server.id] != []:
+    player = queues[server.id].pop(0)
+    play_audio(ctx, player)
+
 # Plays audio from player
-async def play_audio(ctx, player):
-  if ctx.voice_client.is_playing():
-    ctx.voice_client.stop()
+def play_audio(ctx, player):
+  voice_client = ctx.message.guild.voice_client
+  voice_client.play(player, after=lambda c: get_next_player(ctx))
 
-  ctx.voice_client.play(player, after=lambda e: print(f'Player error: {e}') if e else None)
+async def let_bot_sleep(ctx):
+  voice_client = ctx.message.guild.voice_client
 
-  ctx.voice_client.pause() # Pause the client to let it set up the stream
-  await asyncio.sleep(2)
-  ctx.voice_client.resume()
+  voice_client.pause() # Pause the client to let it set up the stream
+  await asyncio.sleep(2) # Letting the bot sleep fixes an issue with the player going fast for the first couple of seconds
+  voice_client.resume()
 
 # On message in chat
 @bot.event
@@ -101,10 +111,20 @@ async def on_message(message):
   # Plays a random gandalf quote whenever "gandalf" is present in message
   if "gandalf" in message.content.lower():
     ctx = await bot.get_context(message)
-    await connect(ctx)
-    
-    source = FFmpegPCMAudio(os.path.join("quotes", quotes[random.randint(0, len(quotes) - 1)]), executable=os.environ.get("FFMPEG_PATH"))    
-    await play_audio(ctx, source)
+    voice_client = message.guild.voice_client
+    quote_to_play = quotes[random.randint(0, len(quotes) - 1)]
+    player = FFmpegPCMAudio(os.path.join("quotes", quote_to_play), executable=os.environ.get("FFMPEG_PATH"))    
+
+    if voice_client is not None:
+      if voice_client.is_playing():
+        await Music.enqueue(ctx, player)
+      else:        
+        play_audio(ctx, player)
+        await let_bot_sleep(ctx)
+    else:  
+      await connect(ctx)
+      play_audio(ctx, player)   
+      await let_bot_sleep(ctx) 
 
   # This is needed to trigger actual commands like !play or !stop
   await bot.process_commands(message)
@@ -155,63 +175,143 @@ class Music(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
 
-  async def stream_audio(self, ctx, url):
-    await connect(ctx)
+  async def stream_audio(self, ctx, player):
     async with ctx.typing():
-      player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
-      await play_audio(ctx, player)
+      await connect(ctx)      
+      play_audio(ctx, player)
+      await let_bot_sleep(ctx)
     
     await ctx.send(f'Now playing: {player.title}')
 
+  async def enqueue(self, ctx, player):
+    server = ctx.message.guild
+
+    if server.id in queues:
+      queues[server.id].append(player)
+    else:
+      queues[server.id] = [player]
+
+    if type(player) is not FFmpegPCMAudio:      
+      await ctx.send(player.title + " has been added to the queue. Position #" + str(len(queues[server.id])))
+
   @commands.command(brief='Plays a video\'s audio using youtube URL specified')
   async def play(self, ctx, *, url):
-    if ctx.voice_client is None:
-      await self.stream_audio(ctx, url)
-    else: 
-      if not ctx.voice_client.is_playing():
-        await self.stream_audio(ctx, url)
-      else: 
-        # Add song to queue
-        await ctx.send("Queues haven't been implemented yet. Please use !stop or wait until song has finished playing")
+    player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
+    voice_client = ctx.message.guild.voice_client
+
+    if voice_client is not None:
+      if voice_client.is_playing():        
+        await self.enqueue(ctx, player)
+      else:
+        await self.stream_audio(ctx, player)
+    else:  
+      await self.stream_audio(ctx, player)
+
+  @commands.command(brief='Clears the queue')
+  async def clear(self, ctx):
+    server = ctx.message.guild
+
+    if server.id not in queues or queues[server.id] is []:
+      await ctx.send("The queue is empty")
+    else:
+      queues[server.id] = []
+      await ctx.send("Cleared queue")
+
+  @commands.command(brief='Skips the current song')
+  async def skip(self, ctx):
+    voice_client = ctx.message.guild.voice_client
+
+    if voice_client is not None:
+      if voice_client.is_playing():  
+        voice_client.stop()
+              
+        await ctx.send("Skipped")
+      else:
+        await ctx.send("Nothing to skip")
+    else :
+      await ctx.send("Nothing to skip")
+    
 
   @commands.command(brief='Stops the player')
   async def stop(self, ctx):
-    if ctx.voice_client is not None:
-      if ctx.voice_client.is_playing():
-        ctx.voice_client.stop()
+    voice_client = ctx.message.guild.voice_client
+
+    if voice_client is not None:
+      if voice_client.is_playing():  
+        voice_client.stop()
+
 
   @commands.command(brief='Pauses the player')
   async def pause(self, ctx):
-    if ctx.voice_client is not None:
-      if ctx.voice_client.is_playing():
-        ctx.voice_client.pause()
+    voice_client = ctx.message.guild.voice_client
+
+    if voice_client is not None:
+      if voice_client.is_playing():  
+        voice_client.pause()
+        
 
   @commands.command(brief='Resumes the player')
   async def resume(self, ctx):
-    if ctx.voice_client is not None:
-      if ctx.voice_client.is_paused():
-        ctx.voice_client.resume()
+    voice_client = ctx.message.guild.voice_client
+
+    if voice_client is not None:
+      if voice_client.is_playing():        
+        voice_client.resume()
+
 
   @commands.command(brief='Plays the John Cena Intro')
   async def jc(self, ctx):
-      await connect(ctx)
+    player = discord.FFmpegPCMAudio("songs/JohnCena.mp3")
+    server = ctx.message.guild
+    voice_client = ctx.message.guild.voice_client
 
-      player = discord.FFmpegPCMAudio("songs/JohnCena.mp3")
-      await play_audio(ctx, player)
+    if voice_client is not None:
+      if voice_client.is_playing():       
+        await ctx.send("This song cannot be added to the queue. Wait for all songs to finish playing.")
+      else:
+        play_audio(ctx, player)
+        await let_bot_sleep(ctx)
+
+    else:  
+      await connect(ctx)
+      play_audio(ctx, player)
+      await let_bot_sleep(ctx)
+      
 
   @commands.command(brief='Plays the Star Wars Cantina')
   async def cantina(self, ctx):
-      await connect(ctx)
+    player = discord.FFmpegPCMAudio("songs/Cantina.mp3")
+    server = ctx.message.guild 
+    voice_client = ctx.message.guild.voice_client
 
-      player = discord.FFmpegPCMAudio("songs/Cantina.mp3")
-      await play_audio(ctx, player)
+    if voice_client is not None:
+      if voice_client.is_playing():                
+        await ctx.send("This song cannot be added to the queue. Wait for all songs to finish playing.")
+      else:
+        play_audio(ctx, player)
+        await let_bot_sleep(ctx)
+    else:  
+      await connect(ctx)
+      play_audio(ctx, player)
+      await let_bot_sleep(ctx)
+
 
   @commands.command(brief='Plays Lost Woods from Zelda: Ocarina of Time')
   async def lw(self, ctx):
+    player = discord.FFmpegPCMAudio("songs/LostWoods.mp3")
+    server = ctx.message.guild
+    voice_client = ctx.message.guild.voice_client
+
+    if voice_client is not None:
+      if voice_client.is_playing():       
+        await ctx.send("This song cannot be added to the queue. Wait for all songs to finish playing.")
+      else:
+        play_audio(ctx, player)
+        await let_bot_sleep(ctx)
+
+    else:  
       await connect(ctx)
-
-      player = discord.FFmpegPCMAudio("songs/LostWoods.mp3")
-      await play_audio(ctx, player)
-
+      play_audio(ctx, player)
+      await let_bot_sleep(ctx)
 bot.add_cog(Music(bot))
 bot.run(os.environ.get("TOKEN"))
