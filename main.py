@@ -79,31 +79,16 @@ async def connect(ctx):
   if not (is_connected(ctx)):
     await ctx.author.voice.channel.connect()
 
-# Plays a random quote
-async def play_audio(source):  
+# Plays audio from player
+async def play_audio(ctx, player):
   if ctx.voice_client.is_playing():
     ctx.voice_client.stop()
 
   ctx.voice_client.play(player, after=lambda e: print(f'Player error: {e}') if e else None)
 
-# Downloads youtube video from url using yt-dlp
-async def download_yt_video_from_url(url):
-  ydl_options = {
-    'format': 'bestaudio/best',
-    'postprocessors': [{
-      'key': 'FFmpegExtractAudio',
-      'preferredcodec': 'mp3',
-      'preferredquality': 192,
-    }]
-  }
-
-  with yt_dlp.YoutubeDL(ydl_options) as ydl:
-    ydl.download([url])
-
-async def rename_song_file():
-  for file in os.listdir("./"):
-    if file.endswith(".mp3"):
-      os.rename(file, "song.mp3")
+  ctx.voice_client.pause() # Pause the client to let it set up the stream
+  await asyncio.sleep(2)
+  ctx.voice_client.resume()
 
 # On message in chat
 @bot.event
@@ -113,92 +98,119 @@ async def on_message(message):
   if message.author is bot.user:
       return
 
-
   if "gandalf" in message.content:
-    await connect(message)
+    ctx = await bot.get_context(message)
+    await connect(ctx)
     
-    source = FFmpegPCMAudio(os.path.join("quotes", quotes[random.randint(0, len(quotes) - 1)]), executable=os.environ.get("FFMPEG_PATH"))
-    await play_audio(source)
+    source = FFmpegPCMAudio(os.path.join("quotes", quotes[random.randint(0, len(quotes) - 1)]), executable=os.environ.get("FFMPEG_PATH"))    
+    await play_audio(ctx, source)
 
   # This is needed to trigger actual commands like !play or !stop
   await bot.process_commands(message)
 
-# Checks if a song is already playing
-async def is_song_there() -> bool:
-  for file in os.listdir("./"):
-    if file.title() == "Song.Mp3":
-      return True
-  
-  return False
+# Source for some of the code below: https://github.com/Rapptz/discord.py/blob/45d498c1b76deaf3b394d17ccf56112fa691d160/examples/basic_voice.py
+ytdl_format_options = {
+    'format': 'bestaudio/best',
+    'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
+    'restrictfilenames': True,
+    'noplaylist': True,
+    'nocheckcertificate': True,
+    'ignoreerrors': False,
+    'logtostderr': False,
+    'quiet': True,
+    'no_warnings': True,
+    'default_search': 'auto',
+    'source_address': '0.0.0.0' # bind to ipv4 since ipv6 addresses cause issues sometimes
+}
 
-@bot.command(brief='Plays a video\'s audio using youtube URL specified')
-async def play(ctx, arg):
-  if voice is None:
-    await play_song(ctx, arg)
-  else: 
-    if not voice.is_playing():
-      await play_song(ctx, arg)
+ffmpeg_options = {
+    'options': '-vn'
+}
+
+ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
+
+class YTDLSource(discord.PCMVolumeTransformer):
+    def __init__(self, source, *, data, volume=0.5):
+        super().__init__(source, volume)
+
+        self.data = data
+
+        self.title = data.get('title')
+        self.url = data.get('url')
+
+    @classmethod
+    async def from_url(cls, url, *, loop=None, stream=False):
+        loop = loop or asyncio.get_event_loop()
+        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
+
+        if 'entries' in data:
+            # take first item from a playlist
+            data = data['entries'][0]
+
+        filename = data['url'] if stream else ytdl.prepare_filename(data)
+        return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
+
+class Music(commands.Cog):
+  def __init__(self, bot):
+    self.bot = bot
+
+  async def stream_audio(self, ctx, url):
+    await connect(ctx)
+    async with ctx.typing():
+      player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
+      await play_audio(ctx, player)
+    
+    await ctx.send(f'Now playing: {player.title}')
+
+  @commands.command(brief='Plays a video\'s audio using youtube URL specified')
+  async def play(self, ctx, *, url):
+    if ctx.voice_client is None:
+      await self.stream_audio(ctx, url)
     else: 
-      # Add song to queue
-      await ctx.send("Queues haven't been implemented yet. Please use !stop or wait until song has finished playing")
+      if not ctx.voice_client.is_playing():
+        await self.stream_audio(ctx, url)
+      else: 
+        # Add song to queue
+        await ctx.send("Queues haven't been implemented yet. Please use !stop or wait until song has finished playing")
 
-async def play_song(ctx, arg):
-  song_there = await is_song_there()
+  @commands.command(brief='Stops the player')
+  async def stop(self, ctx):
+    if ctx.voice_client is not None:
+      if ctx.voice_client.is_playing():
+        ctx.voice_client.stop()
 
-  if song_there:
-    os.remove("song.mp3")
-  
-  await connect(ctx)
+  @commands.command(brief='Pauses the player')
+  async def pause(self, ctx):
+    if ctx.voice_client is not None:
+      if ctx.voice_client.is_playing():
+        ctx.voice_client.pause()
 
-  await download_yt_video_from_url(arg)
-  await rename_song_file()
+  @commands.command(brief='Resumes the player')
+  async def resume(self, ctx):
+    if ctx.voice_client is not None:
+      if ctx.voice_client.is_paused():
+        ctx.voice_client.resume()
 
-  source = discord.FFmpegPCMAudio("song.mp3")
-  await play_audio(source)
-  
-@bot.command(brief='Stops the player')
-async def stop(ctx):
+  @commands.command(brief='Plays the John Cena Intro')
+  async def jc(self, ctx):
+      await connect(ctx)
 
-  if voice is not None:
-    if voice.is_playing():
-      voice.stop()
+      player = discord.FFmpegPCMAudio("songs/JohnCena.mp3")
+      await play_audio(ctx, player)
 
-@bot.command(brief='Pauses the player')
-async def pause(ctx):
-  global voice
+  @commands.command(brief='Plays the Star Wars Cantina')
+  async def cantina(self, ctx):
+      await connect(ctx)
 
-  if voice is not None:
-    if voice.is_playing():
-      voice.pause()
+      player = discord.FFmpegPCMAudio("songs/Cantina.mp3")
+      await play_audio(ctx, player)
 
-@bot.command(brief='Resumes the player')
-async def resume(ctx):
-  global voice
+  @commands.command(brief='Plays Lost Woods from Zelda: Ocarina of Time')
+  async def lw(self, ctx):
+      await connect(ctx)
 
-  if voice is not None:
-    if voice.is_paused():
-      voice.resume()
+      player = discord.FFmpegPCMAudio("songs/LostWoods.mp3")
+      await play_audio(ctx, player)
 
-@bot.command(brief='Plays the John Cena Intro')
-async def jc(ctx):
-    await connect(ctx)
-
-    source = discord.FFmpegPCMAudio("songs/JohnCena.mp3")
-    await play_audio(source)
-
-@bot.command(brief='Plays the Star Wars Cantina')
-async def cantina(ctx):
-    await connect(ctx)
-
-    source = discord.FFmpegPCMAudio("songs/Cantina.mp3")
-    await play_audio(source)
-
-@bot.command(brief='Plays Lost Woods from Zelda: Ocarina of Time')
-async def lw(ctx):
-    await connect(ctx)
-
-    source = discord.FFmpegPCMAudio("songs/LostWoods.mp3")
-    await play_audio(source)
-
-
+bot.add_cog(Music(bot))
 bot.run(os.environ.get("TOKEN"))
