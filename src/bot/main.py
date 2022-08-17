@@ -41,11 +41,11 @@ async def gandalf(message):
         if voice_client.is_playing():
             await ctx.send("This feature isn't available while a song is playing")
         else:        
-            Utils.play_audio(ctx, player)
+            Music.play_audio(ctx, player)
             await Utils.let_bot_sleep(ctx)
     else:  
         await Utils.connect(ctx)
-        Utils.play_audio(ctx, player)   
+        Music.play_audio(ctx, player)
         await Utils.let_bot_sleep(ctx)
 
 @bot.event
