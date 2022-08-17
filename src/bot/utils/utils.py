@@ -17,7 +17,7 @@ class Utils(commands.Cog):
         global client
 
         voice_client = discord.utils.get(client.voice_clients, guild=ctx.guild)
-        isConnected = voice_client and voice_client.is_connected() 
+        isConnected = voice_client and voice_client.is_connected()
         return isConnected
 
     @classmethod

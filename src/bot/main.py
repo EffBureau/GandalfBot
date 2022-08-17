@@ -1,16 +1,14 @@
-from email import utils
 from discord import FFmpegPCMAudio
 import random
 import os
 from discord.ext import commands
 import json
 from dotenv import load_dotenv
-
 from cogs.music import Music
 from utils.utils import Utils
 from utils.quotes import Quotes
-load_dotenv("variables.env")
 
+load_dotenv("variables.env")
 
 # Initiate bot
 bot = commands.Bot(command_prefix="!")

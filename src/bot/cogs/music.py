@@ -1,14 +1,10 @@
 import asyncio
-from discord.ext import commands
-from asyncio.windows_events import NULL
 import discord
+import youtube_dl
+from discord.ext import commands
 from discord import FFmpegPCMAudio
 from discord.ext import commands
-import youtube_dl
-
 from utils.utils import Utils
-
-
 
 # Source for some of the code below: https://github.com/Rapptz/discord.py/blob/45d498c1b76deaf3b394d17ccf56112fa691d160/examples/basic_voice.py
 ytdl_format_options = {
@@ -34,7 +30,6 @@ ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
 class YTDLSource(discord.PCMVolumeTransformer):
     def __init__(self, source, *, data, volume=0.5):
         super().__init__(source, volume)
-
 
         self.data = data
 
@@ -70,6 +65,7 @@ class Music(commands.Cog):
     def get_next_player(self, ctx):        
         server = ctx.message.guild
 
+        
         if self.queues[server.id] != []:
             player = self.queues[server.id].pop(0)
             self.play_audio(ctx, player)
