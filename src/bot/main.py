@@ -56,7 +56,7 @@ async def on_message(message):
         return
 
     if "gandalf" in message.content.lower():
-        gandalf(message)
+        await gandalf(message)
     
     await bot.process_commands(message) # This is needed to trigger actual commands like !play or !stop
             
