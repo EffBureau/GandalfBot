@@ -4,3 +4,4 @@ quotes.json
 *.mp3
 *.webm
 *.pyc
+/.vscode/launch.json
