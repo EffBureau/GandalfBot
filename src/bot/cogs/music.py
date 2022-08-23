@@ -53,55 +53,69 @@ class Music(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-
-    @classmethod    
-    def play_audio(self, ctx, player):
+    
+    async def play_audio(self, ctx, url):
         """"Plays audio from player"""
 
-        voice_client = ctx.message.guild.voice_client
-        voice_client.play(player, after=lambda c: self.get_next_player(ctx))
-
-    @classmethod
-    def get_next_player(self, ctx):        
-        server = ctx.message.guild
-
-        
-        if self.queues[server.id] != []:
-            player = self.queues[server.id].pop(0)
-            self.play_audio(ctx, player)
-
-    async def stream_audio(self, ctx, player):
-        async with ctx.typing():
-            await Utils.connect(ctx)   
-            self.play_audio(ctx, player)
-            await Utils.let_bot_sleep(ctx)
-
-    
+        player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
         await ctx.send(f'Now playing: {player.title}')
 
-    async def enqueue(self, ctx, player):
+        voice_client = await Utils.connect(ctx)
+        voice_client.play(player, after=lambda c: self.play_next(ctx))
+        await Utils.let_bot_sleep(ctx)
+
+    def play_next(self, ctx):
+        """"Plays audio from player"""
+
+        server = ctx.message.guild
+        voice_client = server.voice_client
+        
+        next_url = self.get_next_url(ctx)
+
+        if next_url is not None:
+            loop = self.bot.loop or asyncio.get_event_loop()
+
+            next_player = asyncio.run_coroutine_threadsafe(self.stream_audio(ctx, next_url), loop)
+
+            voice_client.play(next_player.result(), after=lambda c: self.play_next(ctx))
+            asyncio.run_coroutine_threadsafe(Utils.let_bot_sleep(ctx), loop)
+
+    def get_next_url(self, ctx):        
+        server = ctx.message.guild
+        
+        if self.queues[server.id]:
+            return self.queues[server.id].pop(0)    
+    
+    async def stream_audio(self, ctx, url):
+        async with ctx.typing():
+            player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
+            
+        await ctx.send(f'Now playing: {player.title}')
+        return player
+
+    async def enqueue(self, ctx, url):
         server = ctx.message.guild
 
         if server.id in self.queues:
-            self.queues[server.id].append(player)
+            self.queues[server.id].append(url)
         else:
-            self.queues[server.id] = [player]
+            self.queues[server.id] = [url]
 
-        if type(player) is not FFmpegPCMAudio:      
+        if type(player) is not FFmpegPCMAudio:
+            player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
             await ctx.send(player.title + " has been added to the queue. Position #" + str(len(self.queues[server.id])))
 
     @commands.command(brief='Plays a video\'s audio using youtube URL specified')
-    async def play(self, ctx, *, url):
-        player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
+    async def play(self, ctx, *, url):        
         voice_client = ctx.message.guild.voice_client
 
         if voice_client is not None:
             if voice_client.is_playing():        
-                await self.enqueue(ctx, player)
+                await self.enqueue(ctx, url)
             else:
-                await self.stream_audio(ctx, player)
+                await self.play_audio(ctx, url)
         else:  
-            await self.stream_audio(ctx, player)
+            await self.play_audio(ctx, url)
 
     @commands.command(brief='Clears the queue')
     async def clear(self, ctx):
