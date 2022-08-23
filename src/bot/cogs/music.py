@@ -75,7 +75,7 @@ class Music(commands.Cog):
         if next_url is not None:
             loop = self.bot.loop or asyncio.get_event_loop()
 
-            next_player = asyncio.run_coroutine_threadsafe(self.stream_audio(ctx, next_url), loop)
+            next_player = asyncio.run_coroutine_threadsafe(self.get_player(ctx, next_url), loop)
 
             voice_client.play(next_player.result(), after=lambda c: self.play_next(ctx))
             asyncio.run_coroutine_threadsafe(Utils.let_bot_sleep(ctx), loop)
@@ -86,7 +86,7 @@ class Music(commands.Cog):
         if self.queues[server.id]:
             return self.queues[server.id].pop(0)    
     
-    async def stream_audio(self, ctx, url):
+    async def get_player(self, ctx, url):
         async with ctx.typing():
             player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
             
