@@ -25,7 +25,9 @@ class Utils(commands.Cog):
         """"Connects to a voice channel"""
 
         if not self.is_connected(ctx):
-            await ctx.author.voice.channel.connect()
+            return await ctx.author.voice.channel.connect()
+
+        return ctx.message.guild.voice_client
 
     @classmethod
     async def let_bot_sleep(self, ctx):
