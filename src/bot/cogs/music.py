@@ -3,7 +3,6 @@ import discord
 import youtube_dl
 from discord.ext import commands
 from discord import FFmpegPCMAudio
-
 from utils.utils import Utils
 
 # Source for some of the code below: https://github.com/Rapptz/discord.py/blob/45d498c1b76deaf3b394d17ccf56112fa691d160/examples/basic_voice.py
@@ -111,6 +110,20 @@ class Music(commands.Cog):
             player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
             await ctx.send(player.title + " has been added to the queue. Position #" + str(len(self.queues[server.id])))
 
+    async def play_stored_song(self, ctx, player, msg):
+        """Plays song that is already stored on computer"""
+
+        voice_client = await Utils.connect(ctx)
+
+        if voice_client is not None:
+            if voice_client.is_playing():       
+                await ctx.send("This song cannot be added to the queue. Wait for all songs to finish playing.")
+            else:
+                voice_client.play(player)
+                await Utils.let_bot_sleep(ctx)
+
+                await ctx.send(msg)
+
     @commands.command(brief='Plays a video\'s audio using youtube URL specified')
     async def play(self, ctx, *, url):        
         voice_client = ctx.message.guild.voice_client
@@ -144,15 +157,16 @@ class Music(commands.Cog):
             else:
                 await ctx.send("Nothing to skip")
         else :
-            await ctx.send("Nothing to skip")
-    
+            await ctx.send("Nothing to skip")    
 
     @commands.command(brief='Stops the player')
     async def stop(self, ctx):
         voice_client = ctx.message.guild.voice_client
+        server = ctx.message.guild
 
         if voice_client is not None:
             if voice_client.is_playing():  
+                self.queues[server.id] = []
                 voice_client.stop()
 
                 await ctx.send("Stopping")
@@ -192,59 +206,18 @@ class Music(commands.Cog):
     @commands.command(brief='Plays the John Cena Intro')
     async def jc(self, ctx):
         player = discord.FFmpegPCMAudio("../songs/JohnCena.mp3")
-        voice_client = ctx.message.guild.voice_client
 
-        if voice_client is not None:
-            if voice_client.is_playing():       
-                await ctx.send("This song cannot be added to the queue. Wait for all songs to finish playing.")
-            else:
-                voice_client.play(player)
-                await Utils.let_bot_sleep(ctx)
-
-                await ctx.send("Now playing: John Cena")
-        else:  
-            await Utils.connect(ctx)
-            self.play_audio(ctx, player)
-            await Utils.let_bot_sleep(ctx)
-      
-            await ctx.send("Now playing: John Cena")
+        await self.play_stored_song(ctx, player, "Now playing: John Cena")
 
     @commands.command(brief='Plays the Star Wars Cantina')
     async def cantina(self, ctx):
-        player = discord.FFmpegPCMAudio("../songs/Cantina.mp3")
-        voice_client = ctx.message.guild.voice_client
+        player = discord.FFmpegPCMAudio("../songs/Cantina.mp3")        
 
-        if voice_client is not None:
-            if voice_client.is_playing():                
-                await ctx.send("This song cannot be added to the queue. Wait for all songs to finish playing.")
-            else:                
-                voice_client.play(player)
-                await Utils.let_bot_sleep(ctx)
-
-                await ctx.send("Now playing: Cantina")
-        else:  
-            await Utils.connect(ctx)
-            self.play_audio(ctx, player)
-            await Utils.let_bot_sleep(ctx)
-
-            await ctx.send("Now playing: Cantina")
+        await self.play_stored_song(ctx, player, "Now playing: Cantina")
 
     @commands.command(brief='Plays Lost Woods from Zelda: Ocarina of Time')
     async def lw(self, ctx):
         player = discord.FFmpegPCMAudio("../songs/LostWoods.mp3")
-        voice_client = ctx.message.guild.voice_client
+        
+        await self.play_stored_song(ctx, player, "Now playing: Lost Woods")
 
-        if voice_client is not None:
-            if voice_client.is_playing():       
-                await ctx.send("This song cannot be added to the queue. Wait for all songs to finish playing.")
-            else:
-                voice_client.play(player)
-                await Utils.let_bot_sleep(ctx)
-
-                await ctx.send("Now playing: Lost woods")
-        else:  
-            await Utils.connect(ctx)
-            self.play_audio(ctx, player)
-            await Utils.let_bot_sleep(ctx)
-
-            await ctx.send("Now playing: Lost woods")
