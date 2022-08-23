@@ -8,7 +8,7 @@ from cogs.music import Music
 from utils.utils import Utils
 from utils.quotes import Quotes
 
-load_dotenv("variables.env")
+load_dotenv("C:/Users/Francis/ProgrammingProjects/GandalfBot/src/bot/variables.env")
 
 # Initiate bot
 bot = commands.Bot(command_prefix="!")
@@ -19,7 +19,7 @@ Quotes.download_quotes()
 
 quotes = []
 
-with open('quotes.json') as json_quotes:
+with open('C:/Users/Francis/ProgrammingProjects/GandalfBot/src/bot/quotes.json') as json_quotes:
     quotes.extend(json.load(json_quotes))
 
 

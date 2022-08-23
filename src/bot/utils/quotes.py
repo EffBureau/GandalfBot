@@ -9,7 +9,7 @@ class Quotes():
     @classmethod
     def download_quotes(self):
         # Find all .wav files
-        files = glob.glob("../quotes/*.wav")
+        files = glob.glob("C:/Users/Francis/ProgrammingProjects/GandalfBot/src/quotes/*.wav")
 
         # Check if files are empty
         if not any(files):
@@ -31,9 +31,9 @@ class Quotes():
                 quote = split_link[len(split_link) - 1]
 
                 # Create file
-                open(os.path.join("../quotes", quote), 'wb').write(r.content)
+                open(os.path.join("C:/Users/Francis/ProgrammingProjects/GandalfBot/src/quotes", quote), 'wb').write(r.content)
                 filenames.append(quote)
 
             # Dump all file names in a .json file
-            with open('quotes.json', 'w') as outfile:
+            with open('C:/Users/Francis/ProgrammingProjects/GandalfBot/src/bot/quotes.json', 'w') as outfile:
                 json.dump(filenames, outfile)
