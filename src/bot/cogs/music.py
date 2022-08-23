@@ -55,7 +55,7 @@ class Music(commands.Cog):
         self.bot = bot
     
     async def play_audio(self, ctx, url):
-        """"Plays audio from player"""
+        """"Plays audio from url"""
 
         async with ctx.typing():
             player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
@@ -67,7 +67,7 @@ class Music(commands.Cog):
         await Utils.let_bot_sleep(ctx)
 
     def play_next(self, ctx):
-        """"Plays audio from player"""
+        """"Plays next audio from queue"""
 
         server = ctx.message.guild
         voice_client = server.voice_client
@@ -82,7 +82,9 @@ class Music(commands.Cog):
             voice_client.play(next_player.result(), after=lambda c: self.play_next(ctx))
             asyncio.run_coroutine_threadsafe(Utils.let_bot_sleep(ctx), loop)
 
-    def get_next_url(self, ctx):        
+    def get_next_url(self, ctx):    
+        """Gets next url in queue""" 
+
         server = ctx.message.guild
         
         if self.queues[server.id]:
@@ -96,6 +98,8 @@ class Music(commands.Cog):
         return player
 
     async def enqueue(self, ctx, url):
+        """Appends url to queue"""
+
         server = ctx.message.guild
 
         if server.id in self.queues:
