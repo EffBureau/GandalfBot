@@ -57,7 +57,9 @@ class Music(commands.Cog):
     async def play_audio(self, ctx, url):
         """"Plays audio from player"""
 
-        player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
+        async with ctx.typing():
+            player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
+            
         await ctx.send(f'Now playing: {player.title}')
 
         voice_client = await Utils.connect(ctx)
