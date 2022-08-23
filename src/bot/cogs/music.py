@@ -3,7 +3,7 @@ import discord
 import youtube_dl
 from discord.ext import commands
 from discord import FFmpegPCMAudio
-from discord.ext import commands
+
 from utils.utils import Utils
 
 # Source for some of the code below: https://github.com/Rapptz/discord.py/blob/45d498c1b76deaf3b394d17ccf56112fa691d160/examples/basic_voice.py
