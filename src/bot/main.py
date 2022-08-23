@@ -33,20 +33,16 @@ async def gandalf(message):
     """Plays a random gandalf quote whenever "gandalf" is present in message"""
 
     ctx = await bot.get_context(message)
-    voice_client = message.guild.voice_client
+    voice_client = await Utils.connect(ctx)
     quote_to_play = quotes[random.randint(0, len(quotes) - 1)]
-    player = FFmpegPCMAudio(os.path.join("quotes", quote_to_play), executable=os.environ.get("FFMPEG_PATH"))    
+    player = FFmpegPCMAudio(os.path.join("C:/Users/Francis/ProgrammingProjects/GandalfBot/src/quotes", quote_to_play), executable=os.environ.get("FFMPEG_PATH"))    
 
     if voice_client is not None:
         if voice_client.is_playing():
             await ctx.send("This feature isn't available while a song is playing")
         else:        
-            Music.play_audio(ctx, player)
+            voice_client.play(player)
             await Utils.let_bot_sleep(ctx)
-    else:  
-        await Utils.connect(ctx)
-        Music.play_audio(ctx, player)
-        await Utils.let_bot_sleep(ctx)
 
 @bot.event
 async def on_message(message):      
