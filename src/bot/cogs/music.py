@@ -192,7 +192,7 @@ class Music(commands.Cog):
             if voice_client.is_playing():       
                 await ctx.send("This song cannot be added to the queue. Wait for all songs to finish playing.")
             else:
-                self.play_audio(ctx, player)
+                voice_client.play(player)
                 await Utils.let_bot_sleep(ctx)
 
                 await ctx.send("Now playing: John Cena")
@@ -211,8 +211,8 @@ class Music(commands.Cog):
         if voice_client is not None:
             if voice_client.is_playing():                
                 await ctx.send("This song cannot be added to the queue. Wait for all songs to finish playing.")
-            else:
-                self.play_audio(ctx, player)
+            else:                
+                voice_client.play(player)
                 await Utils.let_bot_sleep(ctx)
 
                 await ctx.send("Now playing: Cantina")
@@ -232,7 +232,7 @@ class Music(commands.Cog):
             if voice_client.is_playing():       
                 await ctx.send("This song cannot be added to the queue. Wait for all songs to finish playing.")
             else:
-                self.play_audio(ctx, player)
+                voice_client.play(player)
                 await Utils.let_bot_sleep(ctx)
 
                 await ctx.send("Now playing: Lost woods")
