@@ -106,9 +106,8 @@ class Music(commands.Cog):
         else:
             self.queues[server.id] = [url]
 
-        if type(player) is not FFmpegPCMAudio:
-            player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
-            await ctx.send(player.title + " has been added to the queue. Position #" + str(len(self.queues[server.id])))
+        player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)    
+        await ctx.send(player.title + " has been added to the queue. Position #" + str(len(self.queues[server.id])))
 
     async def play_stored_song(self, ctx, player, msg):
         """Plays song that is already stored on computer"""
