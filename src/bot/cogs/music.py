@@ -5,7 +5,8 @@ from discord.ext import commands
 from discord import FFmpegPCMAudio
 from utils.utils import Utils
 
-class Music(commands.Cog):
+class music(commands.Cog):
+
     queues = {}
 
     def __init__(self, bot):
