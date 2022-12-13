@@ -15,7 +15,7 @@ class mybot(commands.Bot):
     def __init__(self):
         super().__init__(
             command_prefix = "##",
-            case_insensitive=True,
+            case_insensitive = True,
             intents = discord.Intents.all())
         
         self.dirname = os.path.dirname(__file__)

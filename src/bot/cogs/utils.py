@@ -21,6 +21,7 @@ class utils(commands.Cog):
         """"Connects to a voice channel"""
 
         if not self.is_connected_message(ctx, client):
+            print("Connected to : " + ctx.guild.name)            
             return await ctx.author.voice.channel.connect()
 
         return ctx.message.guild.voice_client
@@ -39,6 +40,7 @@ class utils(commands.Cog):
         """"Connects to a voice channel"""
 
         if not self.is_connected_interaction(ctx):
+            print("Connected to : " + ctx.guild.name)
             return await ctx.user.voice.channel.connect()
 
         return ctx.guild.voice_client
@@ -70,6 +72,9 @@ class utils(commands.Cog):
                     await voice.disconnect()
                 if not voice.is_connected():
                     break
+    # End source
+
+
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(utils(bot))

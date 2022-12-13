@@ -1,7 +1,7 @@
 import asyncio
 import os
 import discord
-import youtube_dl
+from yt_dlp import YoutubeDL
 from discord.ext import commands
 from discord import FFmpegPCMAudio, app_commands
 from cogs.utils import utils
@@ -45,7 +45,7 @@ class music(commands.Cog):
 
         server = ctx.guild
         
-        if self.queues[server.id]:
+        if self.queues.get(server.id):
             return self.queues[server.id].pop(0)    
     
     async def get_player(self, ctx, url):
@@ -85,6 +85,7 @@ class music(commands.Cog):
 
     @app_commands.command(name="play", description="Plays a video\'s audio using youtube URL specified")
     async def play(self, ctx: discord.Interaction, *, url: str):        
+        print("Url: " + url)
         voice_client = ctx.guild.voice_client
         await ctx.response.defer()
         
@@ -204,7 +205,7 @@ ffmpeg_options = {
     "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
 }
 
-ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
+ytdl = YoutubeDL(ytdl_format_options)
 
 class YTDLSource(discord.PCMVolumeTransformer):
     def __init__(self, source, *, data, volume=0.5):
