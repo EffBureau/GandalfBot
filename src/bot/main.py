@@ -70,7 +70,7 @@ class mybot(commands.Bot):
 
         if  '!play' in message.content.lower():
             ctx = await bot.get_context(message)
-            await ctx.send("Gandalf now works with slash commands! try /play")
+            await ctx.send("Gandalf now works with slash commands! Try /play")
 
 
         if "gandalf" in message.content.lower():

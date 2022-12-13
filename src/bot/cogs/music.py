@@ -1,10 +1,11 @@
 import asyncio
 import os
 import discord
-import youtube_dl
+from yt_dlp import YoutubeDL
 from discord.ext import commands
 from discord import FFmpegPCMAudio, app_commands
 from cogs.utils import utils
+import json
 
 class music(commands.Cog):
 
@@ -17,12 +18,16 @@ class music(commands.Cog):
     async def play_audio(self, ctx, url):
         """"Plays audio from url"""
 
-        player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
-        await ctx.followup.send(f'Now playing: {player.title}')
+        player = await YTDLSource.get_player_from_url(url, loop=self.bot.loop, stream=True)
+        if player is not None:
+            await ctx.followup.send(f'Now playing: {player.title}')
 
-        voice_client = await utils.connect_interaction(ctx)
-        voice_client.play(player, after=lambda c: self.play_next(ctx))
-        await utils.let_bot_sleep(ctx)
+            voice_client = await utils.connect_interaction(ctx)
+            voice_client.play(player, after=lambda c: self.play_next(ctx))
+            await utils.let_bot_sleep(ctx)
+        else:
+            await ctx.followup.send('Something went wrong with the download. Either the video is age restricted or the owner of the video has disabled it in your country')
+
 
     def play_next(self, ctx):
         """"Plays next audio from queue"""
@@ -45,27 +50,53 @@ class music(commands.Cog):
 
         server = ctx.guild
         
-        if self.queues[server.id]:
+        if self.queues.get(server.id):
             return self.queues[server.id].pop(0)    
     
     async def get_player(self, ctx, url):
-        player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
-            
-        await ctx.channel.send(f'Now playing: {player.title}')
+        player = await YTDLSource.get_player_from_url(url, loop=self.bot.loop, stream=True)
+        if player is not None:
+            await ctx.channel.send(f'Now playing: {player.title}')
+
+            voice_client = await utils.connect_interaction(ctx)
+            voice_client.play(player, after=lambda c: self.play_next(ctx))
+            await utils.let_bot_sleep(ctx)
+        else:
+            await ctx.channel.send('Something went wrong with the download. Either the video is age restricted or the owner of the video has disabled it in your country')
+        
         return player
 
     async def enqueue(self, ctx, url):
         """Appends url to queue"""
 
         server = ctx.guild
+        playlist_urls = []
+        url_type = utils.get_url_type(url)
+
+        if url_type == 1:
+            # Url is of a specific video in a playlist
+            url = utils.get_video_url(url)   
+        elif url_type == 2:
+            # Url is an actual playlist
+            YTDLSource.get_playlist_urls(url, self.bot.loop, True)
+
+        player = await self.get_player(ctx, url)
 
         if server.id in self.queues:
-            self.queues[server.id].append(url)
+            self.queues[server.id].append(url)            
         else:
             self.queues[server.id] = [url]
 
-        player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)    
-        await ctx.followup.send(player.title + " has been added to the queue. Position #" + str(len(self.queues[server.id])))
+        if playlist_urls is not None:
+            self.queues[server.id].append(playlist_urls)
+       
+        if player is not None:
+            await ctx.followup.send(player.title + " has been added to the queue. Position #" + str(len(self.queues[server.id])))
+
+    def enqueue_playlist(self, ctx, url):
+        
+        # TODO Enqueue all songs except first on
+        return
 
     async def play_stored_song(self, ctx, player, msg):
         """Plays song that is already stored on computer"""
@@ -87,9 +118,9 @@ class music(commands.Cog):
     async def play(self, ctx: discord.Interaction, *, url: str):        
         voice_client = ctx.guild.voice_client
         await ctx.response.defer()
-        
+
         if voice_client is not None:
-            if voice_client.is_playing():        
+            if voice_client.is_playing():     
                 await self.enqueue(ctx, url)
             else:
                 await self.play_audio(ctx, url)
@@ -188,10 +219,12 @@ async def setup(bot: commands.Bot) -> None:
 ytdl_format_options = {
     'format': 'bestaudio/best',
     'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
+    'ignoreerrors': True,
+    'playlist_items': 1,
+    'noabortonerror': True,
     'restrictfilenames': True,
-    'noplaylist': True,
+    'flatplaylist': True,
     'nocheckcertificate': True,
-    'ignoreerrors': False,
     'logtostderr': False,
     'quiet': True,
     'no_warnings': True,
@@ -204,7 +237,7 @@ ffmpeg_options = {
     "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
 }
 
-ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
+ytdl = YoutubeDL(ytdl_format_options)
 
 class YTDLSource(discord.PCMVolumeTransformer):
     def __init__(self, source, *, data, volume=0.5):
@@ -216,13 +249,29 @@ class YTDLSource(discord.PCMVolumeTransformer):
         self.url = data.get('url')
 
     @classmethod
-    async def from_url(cls, url, *, loop=None, stream=False):
+    async def get_player_from_url(self, url, *, loop=None, stream=False):
         loop = loop or asyncio.get_event_loop()
         data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
+        
+        if data is not None:
+            if 'entries' in data:
+                # take first item from a playlist
+                data = data['entries'][0]
 
-        if 'entries' in data:
-            # take first item from a playlist
-            data = data['entries'][0]
+            filename = data['url'] if stream else ytdl.prepare_filename(data)
+            return self(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
+    
+    @classmethod
+    async def get_playlist_urls(url, *, loop=None, stream=False):
+        loop = loop or asyncio.get_event_loop()
+        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
+        first_video_url = utils.get_video_url()
+        playlist_urls = []
 
-        filename = data['url'] if stream else ytdl.prepare_filename(data)
-        return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
+        for entry in data['entries']:
+            if entry['id'] is not first_video_url:
+                playlist_urls.append(entry['url'])
+        
+        return playlist_urls
+
+

@@ -21,6 +21,7 @@ class utils(commands.Cog):
         """"Connects to a voice channel"""
 
         if not self.is_connected_message(ctx, client):
+            print("Connected to : " + ctx.guild.name)            
             return await ctx.author.voice.channel.connect()
 
         return ctx.message.guild.voice_client
@@ -39,6 +40,7 @@ class utils(commands.Cog):
         """"Connects to a voice channel"""
 
         if not self.is_connected_interaction(ctx):
+            print("Connected to : " + ctx.guild.name)
             return await ctx.user.voice.channel.connect()
 
         return ctx.guild.voice_client
@@ -50,6 +52,28 @@ class utils(commands.Cog):
         voice_client.pause() # Pause the client to let it set up the stream
         await asyncio.sleep(2) # Letting the bot sleep fixes an issue with the player going fast for the first couple of seconds
         voice_client.resume()
+
+    @classmethod
+    def get_url_type(self, url):
+        """ Returns the playlist url type """
+
+        # Url is of a specific video in a playlist
+        if 'watch?v=' in url and '&list=' in url:
+            return 1
+        # Url is an actual playlist
+        elif 'playlist?list=' in url:
+            return 2 
+        
+        # Url is a single video
+        return 0
+
+    @classmethod    
+    def get_video_url(self, url):
+        """Gets the video url in given playlist url"""
+
+        if 'watch?v=' in url and '&list=' in url:
+            # Sample url : https://www.youtube.com/watch?v=RS2u4_AJdTA&list=PL1Xdrt_TmtOT9ze2-7U20SwPUSMWStefq&index=3
+            return str(url.split('/watch?v=')[1].split('&list='))
     
     # Source: https://stackoverflow.com/questions/63658589/how-to-make-a-discord-bot-leave-the-voice-channel-after-being-inactive-for-x-min
     @commands.Cog.listener()
@@ -70,6 +94,9 @@ class utils(commands.Cog):
                     await voice.disconnect()
                 if not voice.is_connected():
                     break
+    # End source
+
+
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(utils(bot))

@@ -6,10 +6,12 @@ import json
 
 class Quotes():
 
+    dirname = os.path.dirname(__file__)
+
     @classmethod
     def download_quotes(self):
         # Find all .wav files
-        files = glob.glob("C:/Users/Francis/ProgrammingProjects/GandalfBot/src/quotes/*.wav")
+        files = glob.glob(os.path.join(self.dirname, "../../quotes/*.wav"))
 
         # Check if files are empty
         if not any(files):
@@ -31,9 +33,9 @@ class Quotes():
                 quote = split_link[len(split_link) - 1]
 
                 # Create file
-                open(os.path.join("C:/Users/Francis/ProgrammingProjects/GandalfBot/src/quotes", quote), 'wb').write(r.content)
+                open(os.path.join(self.dirname, "../../quotes", quote), 'wb').write(r.content)
                 filenames.append(quote)
 
             # Dump all file names in a .json file
-            with open('C:/Users/Francis/ProgrammingProjects/GandalfBot/src/bot/quotes.json', 'w') as outfile:
+            with open(os.path.join(self.dirname, '../../quotes.json'), 'w') as outfile:
                 json.dump(filenames, outfile)
