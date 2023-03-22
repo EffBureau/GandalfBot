@@ -46,5 +46,6 @@ class Quotes():
                 filenames.append(quote)
 
             # Dump all file names in a .json file
-            with open(os.path.join(self.dirname, '../../quotes.json'), 'w') as outfile:
+            with open(os.path.join(cls.dirname, '../../quotes.json'), 'w', encoding='utf-8') as outfile:
                 json.dump(filenames, outfile)
+                
