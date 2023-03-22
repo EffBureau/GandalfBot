@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 
 class quotes():
     """This class handles the downloading of quotes for gandalf."""
+
     dirname = os.path.dirname(__file__)
 
     @classmethod

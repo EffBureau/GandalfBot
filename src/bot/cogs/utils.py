@@ -57,6 +57,7 @@ class utils(commands.Cog):
             Used to fix an issue where the bot 
             would go faster in the first couple of seconds.
         """
+
         voice_client = ctx.guild.voice_client
 
         voice_client.pause() # Pause the client to let it set up the stream
@@ -67,6 +68,7 @@ class utils(commands.Cog):
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
         """Handles the idle timer after which the bot disconnects"""
+
         if not member.id == self.bot.user.id:
             return
 
@@ -77,6 +79,7 @@ class utils(commands.Cog):
             while True: # This while loop checks if the bot is playing audio
                 await asyncio.sleep(1)
                 time = time + 1
+
                 if voice.is_playing() and not voice.is_paused(): # If it's playing or paused, reset timer
                     time = 0
                 if time == 600: # If it gets to 10 minutes, disconnect
@@ -87,4 +90,5 @@ class utils(commands.Cog):
 
 async def setup(bot: commands.Bot) -> None:
     """Sets up the bot"""
+
     await bot.add_cog(utils(bot))

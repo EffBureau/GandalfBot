@@ -12,12 +12,13 @@ load_dotenv(os.path.join(os.path.dirname(__file__), 'variables.env'))
 
 class mybot(commands.Bot):
     """Contains the main methods for Gandalf bot"""
+
     def __init__(self):
         super().__init__(
             command_prefix = "##",
             case_insensitive = True,
             intents = discord.Intents.all())
-        
+
         self.dirname = os.path.dirname(__file__)
         self.quotes = []
         self.initial_extensions = [
