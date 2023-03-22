@@ -1,16 +1,17 @@
-import discord
+"""This is the main module for Gandalf bot"""
 import random
 import os
-from discord.ext import commands
 import json
+import discord
+from discord.ext import commands
 from dotenv import load_dotenv
 from cogs.utils import utils
-from utils.quotes import Quotes
+from utils.quotes import quotes
 
 load_dotenv(os.path.join(os.path.dirname(__file__), 'variables.env'))
 
 class mybot(commands.Bot):
-
+    """Contains the main methods for Gandalf bot"""
     def __init__(self):
         super().__init__(
             command_prefix = "##",
@@ -29,18 +30,18 @@ class mybot(commands.Bot):
             await self.load_extension(ext)
 
         await bot.tree.sync()
-    
+
     def load_quotes(self):
         """Get all quotes in an array"""
-        
-        Quotes.download_quotes()
 
-        with open(os.path.join(self.dirname, 'quotes.json')) as json_quotes:
+        quotes.download_quotes()
+
+        with open(os.path.join(self.dirname, 'quotes.json'), encoding='utf-8') as json_quotes:
             self.quotes.extend(json.load(json_quotes))
 
     async def on_ready(self):
         """When the bot is online"""
-        
+
         self.load_quotes()
 
         print('We have logged in as {0.user}'.format(self))
@@ -70,7 +71,6 @@ class mybot(commands.Bot):
         if  '!play' in message.content.lower():
             ctx = await bot.get_context(message)
             await ctx.send("Gandalf now works with slash commands! Try /play")
-
 
         if "gandalf" in message.content.lower():
             await self.gandalf(message)

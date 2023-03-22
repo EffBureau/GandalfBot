@@ -7,7 +7,7 @@ import requests
 from bs4 import BeautifulSoup
 
 
-class Quotes():
+class quotes():
     """This class handles the downloading of quotes for gandalf."""
     dirname = os.path.dirname(__file__)
 
@@ -34,8 +34,7 @@ class Quotes():
             # For each file to download
             for a_href in soup.find_all("a", href=True):
                 if "html" not in a_href["href"]:
-                    request = requests.get(
-                        a_href["href"], allow_redirects=True, timeout=5000)
+                    request = requests.get(a_href["href"], allow_redirects=True, timeout=5000)
 
                 # Split the link to get file name
                 split_link = a_href["href"].split('/')
@@ -46,6 +45,5 @@ class Quotes():
                 filenames.append(quote)
 
             # Dump all file names in a .json file
-            with open(os.path.join(cls.dirname, '../../quotes.json'), 'w', encoding='utf-8') as outfile:
+            with open(os.path.join(cls.dirname, '../quotes.json'), 'w', encoding='utf-8') as outfile:
                 json.dump(filenames, outfile)
-                
