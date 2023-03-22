@@ -1,65 +1,76 @@
-import discord
 import asyncio
+import discord
 from discord.ext import commands
 
-class utils(commands.Cog):    
+class utils(commands.Cog):
+    """
+        Contains useful methods for checking connection,
+        connecting to a voice channel or disconnecting.
+    """
 
     def __init__(self, bot):
         self.bot = bot
 
     @classmethod
-    def is_connected_message(self, ctx, client):
+    def is_connected_message(cls, ctx, client):
         """Checks if bot is connected to voice channel"""
 
         voice_client = discord.utils.get(client.voice_clients, guild=ctx.guild)
-        isConnected = voice_client and voice_client.is_connected()
+        is_connected = voice_client and voice_client.is_connected()
 
-        return isConnected
+        return is_connected
 
     @classmethod
-    async def connect_message(self, ctx, client):
+    async def connect_message(cls, ctx, client):
         """"Connects to a voice channel"""
 
-        if not self.is_connected_message(ctx, client):
-            print("Connected to : " + ctx.guild.name)            
+        if not cls.is_connected_message(ctx, client):
+            print("Connected to : " + ctx.guild.name)
             return await ctx.author.voice.channel.connect()
 
         return ctx.message.guild.voice_client
 
     @classmethod
-    def is_connected_interaction(self, ctx):
+    def is_connected_interaction(cls, ctx):
         """Checks if bot is connected to voice channel"""
 
         voice_client = discord.utils.get(ctx.client.voice_clients, guild=ctx.guild)
-        isConnected = voice_client and voice_client.is_connected()
+        is_connected = voice_client and voice_client.is_connected()
 
-        return isConnected
+        return is_connected
 
     @classmethod
-    async def connect_interaction(self, ctx):
+    async def connect_interaction(cls, ctx):
         """"Connects to a voice channel"""
 
-        if not self.is_connected_interaction(ctx):
+        if not cls.is_connected_interaction(ctx):
             print("Connected to : " + ctx.guild.name)
             return await ctx.user.voice.channel.connect()
 
         return ctx.guild.voice_client
 
     @classmethod
-    async def let_bot_sleep(self, ctx):
+    async def let_bot_sleep(cls, ctx):
+        """
+            Lets the bot sleep for a while. 
+
+            Used to fix an issue where the bot 
+            would go faster in the first couple of seconds.
+        """
         voice_client = ctx.guild.voice_client
 
         voice_client.pause() # Pause the client to let it set up the stream
         await asyncio.sleep(2) # Letting the bot sleep fixes an issue with the player going fast for the first couple of seconds
         voice_client.resume()
-    
+
     # Source: https://stackoverflow.com/questions/63658589/how-to-make-a-discord-bot-leave-the-voice-channel-after-being-inactive-for-x-min
     @commands.Cog.listener()
-    async def on_voice_state_update(self, member, before, after):   
+    async def on_voice_state_update(self, member, before, after):
+        """Handles the idle timer after which the bot disconnects"""
         if not member.id == self.bot.user.id:
             return
 
-        elif before.channel is None: 
+        elif before.channel is None:
             voice = after.channel.guild.voice_client
             time = 0
 
@@ -75,4 +86,5 @@ class utils(commands.Cog):
     # End source
 
 async def setup(bot: commands.Bot) -> None:
+    """Sets up the bot"""
     await bot.add_cog(utils(bot))
