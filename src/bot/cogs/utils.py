@@ -74,7 +74,5 @@ class utils(commands.Cog):
                     break
     # End source
 
-
-
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(utils(bot))

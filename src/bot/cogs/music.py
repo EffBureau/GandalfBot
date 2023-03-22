@@ -3,7 +3,7 @@ import os
 import discord
 from yt_dlp import YoutubeDL
 from discord.ext import commands
-from discord import FFmpegPCMAudio, app_commands
+from discord import app_commands
 from cogs.utils import utils
 
 class music(commands.Cog):
@@ -86,6 +86,7 @@ class music(commands.Cog):
     @app_commands.command(name="play", description="Plays a video\'s audio using youtube URL specified")
     async def play(self, ctx: discord.Interaction, *, url: str):        
         print("Url: " + url)
+        
         voice_client = ctx.guild.voice_client
         await ctx.response.defer()
         
@@ -187,6 +188,23 @@ async def setup(bot: commands.Bot) -> None:
 
 # Source for some of the code below: https://github.com/Rapptz/discord.py/blob/45d498c1b76deaf3b394d17ccf56112fa691d160/examples/basic_voice.py
 ytdl_format_options = {
+    'compat_opts': {'format-sort'},
+    'format_sort': ['hasaud',
+                 'lang',
+                 'quality',
+                 'tbr',
+                 'filesize',
+                 'vbr',
+                 'height',
+                 'width',
+                 'proto',
+                 'vext',
+                 'abr',
+                 'aext',
+                 'fps',
+                 'fs_approx',
+                 'source',
+                 'id'],
     'format': 'bestaudio/best',
     'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
     'restrictfilenames': True,

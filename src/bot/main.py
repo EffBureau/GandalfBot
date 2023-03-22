@@ -1,5 +1,4 @@
 import discord
-from discord import FFmpegPCMAudio, app_commands
 import random
 import os
 from discord.ext import commands
@@ -52,7 +51,7 @@ class mybot(commands.Bot):
         ctx = await bot.get_context(message)
         voice_client = await utils.connect_message(ctx, self)
         quote_to_play = self.quotes[random.randint(0, len(self.quotes) - 1)]
-        player = FFmpegPCMAudio(os.path.join(self.dirname,
+        player = discord.FFmpegPCMAudio(os.path.join(self.dirname,
             "../quotes", quote_to_play), executable=os.environ.get("FFMPEG_PATH"))
 
         if voice_client is not None:
