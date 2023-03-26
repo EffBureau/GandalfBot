@@ -17,7 +17,7 @@ class translate(commands.Cog):
         """Translates the selected message to english"""
         translated = GoogleTranslator(source='auto', target='en').translate(message.content)
         response = (
-        '`Ah! I once knew every spell in all the tongues of Elves, Men, & Orcs.`\n\n' # Code block
+        '`Ah! I once knew every spell in all the tongues of Elves, Men and Orcs.`\n\n' # Code block
         
         '__**Translated message :**__\n\n' # Bold, Underline
 
