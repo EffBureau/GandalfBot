@@ -23,7 +23,8 @@ class mybot(commands.Bot):
         self.quotes = []
         self.initial_extensions = [
             "cogs.music",
-            "cogs.utils"
+            "cogs.utils",
+            "cogs.translate"
         ]
 
     async def setup_hook(self):
