@@ -12,7 +12,6 @@ load_dotenv(os.path.join(os.path.dirname(__file__), 'variables.env'))
 
 class mybot(commands.Bot):
     """Contains the main methods for Gandalf bot"""
-
     def __init__(self):
         super().__init__(
             command_prefix = "##",
@@ -24,7 +23,7 @@ class mybot(commands.Bot):
         self.initial_extensions = [
             "cogs.music",
             "cogs.utils",
-            "cogs.translate"
+            "cogs.translate",
         ]
 
     async def setup_hook(self):
@@ -35,7 +34,6 @@ class mybot(commands.Bot):
 
     def load_quotes(self):
         """Get all quotes in an array"""
-
         quotes.download_quotes()
 
         with open(os.path.join(self.dirname, 'quotes.json'), encoding='utf-8') as json_quotes:
@@ -43,14 +41,12 @@ class mybot(commands.Bot):
 
     async def on_ready(self):
         """When the bot is online"""
-
         self.load_quotes()
 
         print('We have logged in as {0.user}'.format(self))
 
     async def gandalf(self, message):
         """Plays a random gandalf quote whenever "gandalf" is present in message"""
-
         ctx = await bot.get_context(message)
         voice_client = await utils.connect_message(ctx, self)
         quote_to_play = self.quotes[random.randint(0, len(self.quotes) - 1)]
@@ -66,7 +62,6 @@ class mybot(commands.Bot):
 
     async def on_message(self, message):
         """On message in chat"""
-
         if message.author.id is bot.user.id:  # Making sure bot doesn't read own messages
             return
 

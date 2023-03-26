@@ -9,7 +9,6 @@ from bs4 import BeautifulSoup
 
 class quotes():
     """This class handles the downloading of quotes for gandalf."""
-
     dirname = os.path.dirname(__file__)
 
     @classmethod
@@ -18,7 +17,6 @@ class quotes():
             Downloads all the quotes from http://www.theargonath.cc/characters/gandalf/sounds/sounds.html 
             and puts them in the quotes folder. 
         """
-
         # Find all .wav files
         files = glob.glob(os.path.join(cls.dirname, "../../quotes/*.wav"))
 

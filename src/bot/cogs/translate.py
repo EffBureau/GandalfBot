@@ -4,10 +4,7 @@ from discord.ext import commands
 from discord import app_commands
 
 class translate(commands.Cog):
-    """
-        Contains translation related methods
-    """
-
+    """Contains translation related methods"""
     def __init__(self, bot):
         self.bot = bot
         self.ctx_menu = app_commands.ContextMenu(
@@ -29,5 +26,5 @@ class translate(commands.Cog):
         await ctx.response.send_message(response, ephemeral=True)
 
 async def setup(bot: commands.Bot) -> None:
-    """Sets up the bot"""
+    """Adds cog to bot"""
     await bot.add_cog(translate(bot))

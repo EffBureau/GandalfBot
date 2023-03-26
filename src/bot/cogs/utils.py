@@ -7,14 +7,12 @@ class utils(commands.Cog):
         Contains useful methods for checking connection,
         connecting to a voice channel or disconnecting.
     """
-
     def __init__(self, bot):
         self.bot = bot
 
     @classmethod
     def is_connected_message(cls, ctx, client):
         """Checks if bot is connected to voice channel"""
-
         voice_client = discord.utils.get(client.voice_clients, guild=ctx.guild)
         is_connected = voice_client and voice_client.is_connected()
 
@@ -23,7 +21,6 @@ class utils(commands.Cog):
     @classmethod
     async def connect_message(cls, ctx, client):
         """"Connects to a voice channel"""
-
         if not cls.is_connected_message(ctx, client):
             print("Connected to : " + ctx.guild.name)
             return await ctx.author.voice.channel.connect()
@@ -33,7 +30,6 @@ class utils(commands.Cog):
     @classmethod
     def is_connected_interaction(cls, ctx):
         """Checks if bot is connected to voice channel"""
-
         voice_client = discord.utils.get(ctx.client.voice_clients, guild=ctx.guild)
         is_connected = voice_client and voice_client.is_connected()
 
@@ -42,7 +38,6 @@ class utils(commands.Cog):
     @classmethod
     async def connect_interaction(cls, ctx):
         """"Connects to a voice channel"""
-
         if not cls.is_connected_interaction(ctx):
             print("Connected to : " + ctx.guild.name)
             return await ctx.user.voice.channel.connect()
@@ -57,7 +52,6 @@ class utils(commands.Cog):
             Used to fix an issue where the bot 
             would go faster in the first couple of seconds.
         """
-
         voice_client = ctx.guild.voice_client
 
         voice_client.pause() # Pause the client to let it set up the stream
@@ -68,7 +62,6 @@ class utils(commands.Cog):
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
         """Handles the idle timer after which the bot disconnects"""
-
         if not member.id == self.bot.user.id:
             return
 
@@ -89,6 +82,5 @@ class utils(commands.Cog):
     # End source
 
 async def setup(bot: commands.Bot) -> None:
-    """Sets up the bot"""
-
+    """Adds cog to bot"""
     await bot.add_cog(utils(bot))

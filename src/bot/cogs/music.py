@@ -8,7 +8,6 @@ from cogs.utils import utils
 
 class music(commands.Cog):
     """Contains methods used for playing sounds """
-
     queues = {}
 
     def __init__(self, bot: commands.Bot) -> None:
@@ -17,7 +16,6 @@ class music(commands.Cog):
 
     async def play_audio(self, ctx, url):
         """"Plays audio from url"""
-
         player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
         await ctx.followup.send(f'Now playing: {player.title}')
 
@@ -27,10 +25,8 @@ class music(commands.Cog):
 
     def play_next(self, ctx):
         """"Plays next audio from queue"""
-
         server = ctx.guild
         voice_client = server.voice_client
-
         next_url = self.get_next_url(ctx)
 
         if next_url is not None:
@@ -43,7 +39,6 @@ class music(commands.Cog):
 
     def get_next_url(self, ctx):
         """Gets next url in queue""" 
-
         server = ctx.guild
 
         if self.queues.get(server.id):
@@ -51,7 +46,6 @@ class music(commands.Cog):
 
     async def get_player(self, ctx, url):
         """Gets the player for specified url"""
-
         player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
 
         await ctx.channel.send(f'Now playing: {player.title}')
@@ -59,7 +53,6 @@ class music(commands.Cog):
 
     async def enqueue(self, ctx, url):
         """Appends url to queue"""
-
         server = ctx.guild
 
         if server.id in self.queues:
@@ -72,7 +65,6 @@ class music(commands.Cog):
 
     async def play_stored_song(self, ctx, player, msg):
         """Plays song that is already stored on computer"""
-
         voice_client = await utils.connect_interaction(ctx)
 
         if voice_client is not None:
@@ -89,7 +81,6 @@ class music(commands.Cog):
     @app_commands.command(name="play", description="Plays a video\'s audio using the specified youtube url")
     async def play(self, ctx: discord.Interaction, *, url: str):
         """Command that plays a video\'s audio using the specified youtube url"""
-
         print("Url: " + url)
 
         voice_client = ctx.guild.voice_client
@@ -106,7 +97,6 @@ class music(commands.Cog):
     @app_commands.command(name="clear", description="Clears the song queue")
     async def clear_queue(self, ctx: discord.Interaction):
         """Command that clears the song queue"""
-
         server = ctx.guild
 
         if server.id not in self.queues or self.queues[server.id] is []:
@@ -118,7 +108,6 @@ class music(commands.Cog):
     @app_commands.command(name="skip", description="Skips the current song")
     async def skip(self, ctx: discord.Interaction):
         """Command that skips the current song"""
-
         voice_client = ctx.guild.voice_client
 
         if voice_client is not None:
@@ -133,7 +122,6 @@ class music(commands.Cog):
     @app_commands.command(name="stop", description="Stops the player")
     async def stop(self, ctx: discord.Interaction):
         """Stops the player"""
-
         voice_client = ctx.guild.voice_client
         server = ctx.guild
 
@@ -151,7 +139,6 @@ class music(commands.Cog):
     @app_commands.command(name="pause", description="Pauses the player")
     async def pause(self, ctx: discord.Interaction):
         """Command that pauses the player"""
-
         voice_client = ctx.guild.voice_client
 
         if voice_client is not None:
@@ -167,7 +154,6 @@ class music(commands.Cog):
     @app_commands.command(name="resume", description="Resumes the player")
     async def resume(self, ctx: discord.Interaction):
         """Command that resumes the player"""
-
         voice_client = ctx.guild.voice_client
 
         if voice_client is not None:
@@ -183,7 +169,6 @@ class music(commands.Cog):
     @app_commands.command(name="jc", description="Plays the John Cena Intro")
     async def jc(self, ctx: discord.Interaction):
         """Command that plays the John Cena Intro"""
-
         player = discord.FFmpegPCMAudio((os.path.join(self.dirname, "../../songs/JohnCena.mp3")))
 
         await self.play_stored_song(ctx, player, "Now playing: John Cena")
@@ -191,7 +176,6 @@ class music(commands.Cog):
     @app_commands.command(name="cantina", description="Plays the Star Wars Cantina")
     async def cantina(self, ctx: discord.Interaction):
         """Command that plays the Star Wars Cantina"""
-
         player = discord.FFmpegPCMAudio(os.path.join(self.dirname, "../../songs/Cantina.mp3"))
 
         await self.play_stored_song(ctx, player, "Now playing: Cantina")
@@ -199,7 +183,6 @@ class music(commands.Cog):
     @app_commands.command(name="lw", description="Plays Lost Woods from Zelda: Ocarina of Time")
     async def lw(self, ctx: discord.Interaction):
         """Command that plays Lost Woods from Zelda: Ocarina of Time"""
-
         player = discord.FFmpegPCMAudio((os.path.join(self.dirname, "../../songs/LostWoods.mp3")))
 
         await self.play_stored_song(ctx, player, "Now playing: Lost Woods")
@@ -256,7 +239,6 @@ ytdl = YoutubeDL(ytdl_format_options)
 
 class YTDLSource(discord.PCMVolumeTransformer):
     """YTDL util class for extracting audio from url"""
-
     def __init__(self, source, *, data, volume=0.5):
         super().__init__(source, volume)
 
@@ -268,7 +250,6 @@ class YTDLSource(discord.PCMVolumeTransformer):
     @classmethod
     async def from_url(cls, url, *, loop=None, stream=False):
         """Extracts youtube player from url"""
-
         loop = loop or asyncio.get_event_loop()
         data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
 
