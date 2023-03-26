@@ -204,9 +204,15 @@ class music(commands.Cog):
 
         await self.play_stored_song(ctx, player, "Now playing: Lost Woods")
 
-async def setup(bot: commands.Bot) -> None:
-    """Sets up cog"""
+    @app_commands.command(name="lqgr", description="Plays lqgr song-oh my god!")
+    async def lqgr(self, ctx: discord.Interaction):
+        """Command that plays lqgr song"""
+        player = discord.FFmpegPCMAudio((os.path.join(self.dirname, "../../songs/Lqgr.mp3")))
 
+        await self.play_stored_song(ctx, player, "Now playing: lqgr song-oh my god!")
+
+async def setup(bot: commands.Bot) -> None:
+    """Adds cog to bot"""
     await bot.add_cog(music(bot))
 
 # Source for some of the code below: https://github.com/Rapptz/discord.py/blob/45d498c1b76deaf3b394d17ccf56112fa691d160/examples/basic_voice.py
