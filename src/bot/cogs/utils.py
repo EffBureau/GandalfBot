@@ -42,6 +42,8 @@ class utils(commands.Cog):
             print("Connected to : " + ctx.guild.name)
             return await ctx.user.voice.channel.connect()
 
+        ctx.response.defer()
+        
         return ctx.guild.voice_client
 
     @classmethod
