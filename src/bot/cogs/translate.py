@@ -23,7 +23,7 @@ class translate(commands.Cog):
 
         f'**{message.author.display_name}:** {translated}\n\n' # Bold
         
-        f'__*Go back to message:*__ {message.jump_url}') # Bold
+        f'__*Go back to message:*__ {message.jump_url}') # Italic, Underline
 
         await ctx.response.send_message(response, ephemeral=True)
 
