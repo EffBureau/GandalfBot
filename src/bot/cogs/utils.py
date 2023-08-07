@@ -41,8 +41,6 @@ class utils(commands.Cog):
         if not cls.is_connected_interaction(ctx):
             print("Connected to : " + ctx.guild.name)
             return await ctx.user.voice.channel.connect()
-
-        ctx.response.defer()
         
         return ctx.guild.voice_client
 

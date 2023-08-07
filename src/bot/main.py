@@ -72,7 +72,7 @@ class mybot(commands.Bot):
         if "gandalf" in message.content.lower():
             await self.gandalf(message)
 
-        # This is needed to trigger actual commands like !play or !stop
+        # This is needed to trigger actual commands like /play or /stop
         await bot.process_commands(message)
 
 bot = mybot()
