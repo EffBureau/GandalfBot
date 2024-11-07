@@ -1,5 +1,7 @@
 import asyncio
+import datetime
 import os
+import time
 import discord
 from yt_dlp import YoutubeDL
 from discord.ext import commands
@@ -17,6 +19,7 @@ class music(commands.Cog):
     async def play_audio(self, ctx, url):
         """"Plays audio from url"""
         player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
+        print(datetime.datetime.now().strftime("%m-%d-%Y, %H:%M:%S") + " > " + "Now playing: " + player.title)
         await ctx.followup.send(f'Now playing: {player.title}')
 
         voice_client = await utils.connect_interaction(ctx)
@@ -81,7 +84,7 @@ class music(commands.Cog):
     @app_commands.command(name="play", description="Plays a video\'s audio using the specified youtube url")
     async def play(self, ctx: discord.Interaction, *, url: str):
         """Command that plays a video\'s audio using the specified youtube url"""
-        print("Url: " + url)
+        print(datetime.datetime.now().strftime("%m-%d-%Y, %H:%M:%S") + " > " + "Url: " + url)
 
         voice_client = ctx.guild.voice_client
         await ctx.response.defer()
@@ -113,6 +116,7 @@ class music(commands.Cog):
         if voice_client is not None:
             if voice_client.is_playing():
                 voice_client.stop()
+
                 await ctx.response.send_message("Skipped")
             else:
                 await ctx.response.send_message("Nothing to skip")
@@ -194,6 +198,13 @@ class music(commands.Cog):
 
         await self.play_stored_song(ctx, player, "Now playing: lqgr song-oh my god!")
 
+    @app_commands.command(name="fb", description="Plays a Free Bird soundbyte!")
+    async def fb(self, ctx: discord.Interaction):
+        """Command that plays a Free Bird soundbyte"""
+        player = discord.FFmpegPCMAudio((os.path.join(self.dirname, "../../songs/freebird.mp3")))
+
+        await self.play_stored_song(ctx, player, "Now playing: Free Bird soundbyte!")
+
 async def setup(bot: commands.Bot) -> None:
     """Adds cog to bot"""
     await bot.add_cog(music(bot))
@@ -232,7 +243,7 @@ ytdl_format_options = {
 
 ffmpeg_options = {
     'options': '-vn',
-    "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
+    'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
 }
 
 ytdl = YoutubeDL(ytdl_format_options)

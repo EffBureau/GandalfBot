@@ -1,4 +1,6 @@
 """This is the main module for Gandalf bot"""
+import logging
+import datetime
 import random
 import os
 import json
@@ -43,7 +45,7 @@ class mybot(commands.Bot):
         """When the bot is online"""
         self.load_quotes()
 
-        print('We have logged in as {0.user}'.format(self))
+        print(datetime.datetime.now().strftime("%m-%d-%Y, %H:%M:%S") + " > " + 'We have logged in as {0.user}'.format(self))
 
     async def gandalf(self, message):
         """Plays a random gandalf quote whenever "gandalf" is present in message"""
@@ -75,5 +77,6 @@ class mybot(commands.Bot):
         # This is needed to trigger actual commands like /play or /stop
         await bot.process_commands(message)
 
+# Assume client refers to a discord.Client subclass...
 bot = mybot()
 bot.run(os.environ.get("TOKEN"))

@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import discord
 from discord.ext import commands
 
@@ -22,7 +23,8 @@ class utils(commands.Cog):
     async def connect_message(cls, ctx, client):
         """"Connects to a voice channel"""
         if not cls.is_connected_message(ctx, client):
-            print("Connected to : " + ctx.guild.name)
+            print(datetime.datetime.now().strftime("%m-%d-%Y, %H:%M:%S") + " > " + "Connected to : " + ctx.guild.name)
+
             return await ctx.author.voice.channel.connect()
 
         return ctx.message.guild.voice_client
@@ -39,9 +41,10 @@ class utils(commands.Cog):
     async def connect_interaction(cls, ctx):
         """"Connects to a voice channel"""
         if not cls.is_connected_interaction(ctx):
-            print("Connected to : " + ctx.guild.name)
+            print(datetime.datetime.now().strftime("%m-%d-%Y, %H:%M:%S") + " > " + "Connected to : " + ctx.guild.name)
+
             return await ctx.user.voice.channel.connect()
-        
+
         return ctx.guild.voice_client
 
     @classmethod
@@ -49,7 +52,7 @@ class utils(commands.Cog):
         """
             Lets the bot sleep for a while. 
 
-            Used to fix an issue where the bot 
+            Used to fix an issue where the bot's playback
             would go faster in the first couple of seconds.
         """
         voice_client = ctx.guild.voice_client
