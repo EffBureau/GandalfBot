@@ -1,3 +1,4 @@
+*.log
 *.wav
 *.env
 quotes.json

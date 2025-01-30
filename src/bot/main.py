@@ -18,7 +18,7 @@ class mybot(commands.Bot):
         super().__init__(
             command_prefix = "##",
             case_insensitive = True,
-            intents = discord.Intents.all())
+            intents = discord.Intents.all())    
 
         self.dirname = os.path.dirname(__file__)
         self.quotes = []
@@ -79,4 +79,6 @@ class mybot(commands.Bot):
 
 # Assume client refers to a discord.Client subclass...
 bot = mybot()
-bot.run(os.environ.get("TOKEN"))
+date = datetime.datetime.now().strftime("%m%d%Y%H%M%S")
+handler = logging.FileHandler(filename='logs/discord-' + date + '.log', encoding='utf-8', mode='w')
+bot.run(os.environ.get("TOKEN"), log_handler=handler, log_level=logging.DEBUG)

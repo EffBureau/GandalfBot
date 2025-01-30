@@ -1,7 +1,6 @@
 import asyncio
 import datetime
 import os
-import time
 import discord
 from yt_dlp import YoutubeDL
 from discord.ext import commands
@@ -234,16 +233,16 @@ ytdl_format_options = {
     'noplaylist': True,
     'nocheckcertificate': True,
     'ignoreerrors': False,
-    'logtostderr': False,
+    'logtostderr': True,
     'quiet': True,
-    'no_warnings': True,
+    'no_warnings': False,
     'default_search': 'auto',
     'source_address': '0.0.0.0' # bind to ipv4 since ipv6 addresses cause issues sometimes
 }
 
 ffmpeg_options = {
-    'options': '-vn',
     'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+    'options': '-vn -loglevel debug -report'
 }
 
 ytdl = YoutubeDL(ytdl_format_options)
